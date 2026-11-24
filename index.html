@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>צמרת · מערכת ניהול</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#view">דילוג לתוכן הראשי</a>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-mark" id="brand-mark"></span>
+      <div>
+        <strong>צמרת</strong>
+        <small>מחסן העצים הגדול בשומרון</small>
+      </div>
+    </div>
+    <nav id="nav" aria-label="תפריט ראשי"></nav>
+    <a class="store-link" id="store-link" href="store.html" target="_blank" rel="noopener"></a>
+    <p class="sidebar-note">גרסת הדגמה (POC). הנתונים בדויים ונשמרים בדפדפן בלבד.</p>
+  </aside>
+  <div class="backdrop" data-action="toggleNav"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" data-action="toggleNav" aria-label="פתיחת התפריט"></button>
+      <h1 id="page-title"></h1>
+      <div class="topbar-status" id="header-status"></div>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+
+  <dialog id="modal" aria-labelledby="modal-title">
+    <header class="modal-head">
+      <h2 id="modal-title"></h2>
+      <button class="icon-btn" id="modal-close" data-action="closeModal" aria-label="סגירה"></button>
+    </header>
+    <div id="modal-body"></div>
+  </dialog>
+
+  <div id="toasts" role="status" aria-live="polite"></div>
+  <div id="print-root"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/invoice-api.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

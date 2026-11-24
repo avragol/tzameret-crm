@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>צמרת · החנות האונליין</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/storefront.css">
+</head>
+<body class="shop">
+  <a class="skip-link" href="#shop-main">דילוג למוצרים</a>
+  <p class="demo-bar">אתר הדגמה. לא מתבצע חיוב, ולא נשלחת הזמנה אמיתית.</p>
+
+  <header class="shop-head">
+    <a class="shop-brand" href="store.html">
+      <span class="brand-mark" id="brand-mark"></span>
+      <span><strong>צמרת</strong><small>מחסן העצים הגדול בשומרון</small></span>
+    </a>
+    <label class="search grow"><span class="sr-only">חיפוש מוצר</span><span id="search-icon"></span>
+      <input type="search" placeholder="מה מחפשים? קורות, דקים, לבודים…" data-input="search"></label>
+    <button class="btn btn-primary cart-btn" data-action="openCart" id="cart-btn"></button>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>כל העץ לפרויקט שלך, במקום אחד</h1>
+      <p>מזמינים באתר, ואוספים מהמחסן או מקבלים משלוח. המלאי באתר מתעדכן ישירות ממערכת המחסן.</p>
+    </div>
+    <ul class="hero-facts">
+      <li><b>איסוף עצמי</b><span>מהמחסן באזור התעשייה</span></li>
+      <li><b>משלוחים</b><span>בתיאום טלפוני</span></li>
+      <li><b>תשלום</b><span>בעת קבלת ההזמנה</span></li>
+    </ul>
+  </section>
+
+  <main id="shop-main" tabindex="-1">
+    <div class="chips" id="shop-cats" role="group" aria-label="סינון לפי קטגוריה"></div>
+    <div class="shop-grid" id="shop-grid"></div>
+  </main>
+
+  <footer class="shop-foot">
+    <p id="shop-contact"></p>
+    <p>המחירים כוללים מע״מ. <a href="index.html">כניסה למערכת הניהול</a></p>
+  </footer>
+
+  <dialog id="modal" aria-labelledby="modal-title">
+    <header class="modal-head">
+      <h2 id="modal-title"></h2>
+      <button class="icon-btn" id="modal-close" data-action="closeModal" aria-label="סגירה"></button>
+    </header>
+    <div id="modal-body"></div>
+  </dialog>
+  <div id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/invoice-api.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/storefront.js"></script>
+</body>
+</html>
