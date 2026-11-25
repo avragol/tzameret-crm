@@ -6,7 +6,7 @@
  * The UI also validates, but this layer is the source of truth.
  */
 const Store = (() => {
-  const KEY = 'tzameret-crm-v3';
+  const KEY = 'tzameret-crm-v5';
   const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'account'];
   let state = null;
 
@@ -40,12 +40,13 @@ const Store = (() => {
     return t;
   }
 
+  // Sale prices include VAT, like in the real store. The VAT is taken out of the total.
   function computeTotals(lines, discountPct = 0, vatRate = state.settings.vatRate) {
     const gross = round2(lines.reduce((s, l) => s + round2(l.qty * l.price), 0));
     const discount = round2((gross * (discountPct || 0)) / 100);
-    const subtotal = round2(gross - discount);
-    const vat = round2(subtotal * vatRate);
-    return { gross, discount, subtotal, vat, total: round2(subtotal + vat) };
+    const total = round2(gross - discount);
+    const subtotal = round2(total / (1 + vatRate));
+    return { gross, discount, subtotal, vat: round2(total - subtotal), total };
   }
 
   const makeLine = (p, qty) => ({
@@ -90,51 +91,43 @@ const Store = (() => {
     const settings = {
       vatRate: 0.18,
       business: {
-        name: 'צמרת', tagline: 'מחסן העצים הגדול בשומרון',
-        address: 'אזור התעשייה, שומרון', phone: '03-555-0100', vatId: makeVatId(51428830),
+        name: 'צמרת', tagline: 'מרכז העץ הגדול בשומרון',
+        address: 'חוות גלעד', phone: '050-6576877', hours: 'ימים א׳-ה׳, 8:00-17:00',
+        vatId: makeVatId(51428830), // invented number, for the demo only
       },
     };
 
+    // The suppliers are invented. The real store does not publish its suppliers.
     const suppliers = [
-      ['יערות הצפון בע״מ', 'עץ גושני', 'אבנר שטרן', '04-555-0141', 'שוטף + 60', 18450],
-      ['פלטות השרון בע״מ', 'לוחות ופלטות', 'גלית מור', '09-555-0152', 'שוטף + 30', 9320],
-      ['דק-ליין יבוא ושיווק', 'דקים וחיפויים', 'עומר חדד', '03-555-0163', 'שוטף + 45', 27600],
-      ['פרזול אריאל', 'פרזול וחיבורים', 'שמעון ביטון', '03-555-0174', 'שוטף + 30', 0],
-      ['גוונים צבעים ולכות', 'צבעים ולכות', 'נועה רוזן', '08-555-0185', 'מזומן', 1840],
-      ['כלי-טק ציוד מקצועי', 'כלי עבודה', 'איתי גבאי', '02-555-0196', 'שוטף + 30', 0],
+      ['יערות הצפון בע״מ', 'עץ, סכך ובמבוק', 'אבנר שטרן', '04-555-0141', 'שוטף + 60', 18450],
+      ['אוהלי החג יבוא ושיווק', 'סוכות ובדים', 'גלית מור', '09-555-0152', 'שוטף + 30', 27600],
+      ['קמפינג פלוס הפצה', 'קמפינג, ריהוט ומנגלים', 'עומר חדד', '03-555-0163', 'שוטף + 45', 9320],
+      ['אור וחשמל סיטונאות', 'חשמל ותאורה', 'שמעון ביטון', '03-555-0174', 'שוטף + 30', 0],
+      ['כלי-טק ציוד מקצועי', 'כלי עבודה וחומרי עזר', 'איתי גבאי', '02-555-0196', 'מזומן', 1840],
     ].map(([name, category, contact, phone, terms, balance], i) => ({
       id: 's' + (i + 1), name, category, contact, phone, terms, balance,
       email: `orders${i + 1}@example.co.il`, vatId: makeVatId(51400010 + i * 713),
     }));
 
-    const products = [
-      ['קורת אורן 5×10 ס״מ', 'עץ גושני', 'מ״א', 9.5, 16, 840, 200, 0],
-      ['קורת אורן 5×15 ס״מ', 'עץ גושני', 'מ״א', 14, 23, 520, 150, 0],
-      ['קורת אורן 10×10 ס״מ', 'עץ גושני', 'מ״א', 21, 35, 310, 100, 0],
-      ['קורת אשוח מהוקצעת 4.5×9.5 ס״מ', 'עץ גושני', 'מ״א', 8, 14, 95, 150, 0],
-      ['קרש אורן 2.5×10 ס״מ', 'עץ גושני', 'מ״א', 4.2, 7.5, 1200, 300, 0],
-      ['לוח אלון אירופאי 27 מ״מ', 'לוחות ופלטות', 'מ״ר', 310, 490, 42, 15, 1],
-      ['לוח בוק מודבק 40 מ״מ', 'לוחות ופלטות', 'לוח', 420, 650, 18, 10, 1],
-      ['לבוד ליבנה 18 מ״מ 122×244', 'לוחות ופלטות', 'לוח', 165, 259, 64, 20, 1],
-      ['לבוד ליבנה 12 מ״מ 122×244', 'לוחות ופלטות', 'לוח', 118, 185, 12, 20, 1],
-      ['לוח OSB 11 מ״מ 122×244', 'לוחות ופלטות', 'לוח', 62, 98, 150, 40, 1],
-      ['לוח MDF 17 מ״מ 122×244', 'לוחות ופלטות', 'לוח', 95, 149, 88, 30, 1],
-      ['סנדוויץ׳ אורן 17 מ״מ 122×244', 'לוחות ופלטות', 'לוח', 140, 215, 0, 15, 1],
-      ['דק איפאה 2×10 ס״מ', 'דקים וחיפויים', 'מ״א', 38, 62, 460, 120, 2],
-      ['דק במבוק 2×14 ס״מ', 'דקים וחיפויים', 'מ״א', 29, 48, 260, 100, 2],
-      ['דק אורן מחוטא 2.5×12 ס״מ', 'דקים וחיפויים', 'מ״א', 11, 19, 700, 200, 2],
-      ['חיפוי קיר ארז', 'דקים וחיפויים', 'מ״ר', 120, 195, 55, 20, 2],
-      ['ברגי דק נירוסטה 5×50 (200 יח׳)', 'פרזול וחיבורים', 'קופסה', 48, 79, 75, 25, 3],
-      ['ברגי עץ 4×40 (500 יח׳)', 'פרזול וחיבורים', 'קופסה', 22, 39, 130, 40, 3],
-      ['זוויתן מגולוון 90°', 'פרזול וחיבורים', 'יח׳', 3.2, 6.5, 18, 100, 3],
-      ['דבק נגרים 5 ק״ג', 'צבעים ולכות', 'יח׳', 52, 85, 34, 12, 4],
-      ['שמן לדק 2.5 ליטר', 'צבעים ולכות', 'יח׳', 95, 159, 28, 10, 4],
-      ['לכה שקופה על בסיס מים 1 ליטר', 'צבעים ולכות', 'יח׳', 44, 72, 9, 12, 4],
-      ['מסור יד מקצועי', 'כלי עבודה', 'יח׳', 39, 69, 22, 8, 5],
-      ['נייר ליטוש P120 (50 יח׳)', 'כלי עבודה', 'חבילה', 28, 49, 40, 15, 5],
-    ].map(([name, category, unit, cost, price, qty, min, s], i) => ({
-      id: 'p' + (i + 1), sku: 'TZ-' + (1001 + i), name, category, unit, cost, price, qty, min, supplierId: suppliers[s].id,
-    }));
+    // Names, categories, prices and pictures come from the real store (js/catalog.js).
+    // Stock, minimum stock, cost and supplier are invented. The sale price includes VAT. The cost is before VAT.
+    const supplierOf = {
+      'קרשים/לטות': 0, 'במבוק': 0, 'סכך': 0, 'דופן לסוכה': 0,
+      'סוכות': 1, 'בדים לסוכה': 1,
+      'מחצלות וערסלים': 2, 'מנגל ומוצריו': 2, 'שולחנות וכיסאות': 2, 'כסאות שולחנות': 2, 'מזרונים ומיטות': 2, 'סולמות': 2,
+      'גרילנדות': 3, 'תאורה': 3, 'חשמל': 3, 'מפצלי חשמל': 3, 'תוף כבל מאריך': 3, 'מזגנים ומאווררים': 3,
+      'כלי עבודה': 4, 'אזיקונים': 4,
+    };
+    const products = CATALOG.map(([sku, name, category, price, img], i) => {
+      const typical = price < 30 ? 60 + Math.floor(r() * 340) : price < 400 ? 10 + Math.floor(r() * 70) : 2 + Math.floor(r() * 12);
+      const min = Math.max(1, Math.round(typical * 0.2));
+      const roll = r();
+      const qty = roll < 0.03 ? 0 : roll < 0.11 ? Math.floor(min * r()) + 1 : typical;
+      return {
+        id: 'p' + (i + 1), sku, name, category, unit: 'יח׳', price, cost: round2((price / (1 + settings.vatRate)) * (0.55 + r() * 0.2)), qty, min,
+        supplierId: suppliers[supplierOf[category] ?? 4].id, img: img ? CATALOG_IMG_BASE + img : '',
+      };
+    });
 
     const walkin = { id: 'walkin', name: 'לקוח מזדמן', type: 'private', vatId: '', phone: '', city: '', email: '' };
     const customers = [walkin].concat(
@@ -174,7 +167,7 @@ const Store = (() => {
         const n = 1 + Math.floor(r() * 4);
         while (chosen.size < n) chosen.add(pick(products));
         const lines = [...chosen].map((p) => {
-          const base = p.unit === 'מ״א' ? 5 + Math.floor(r() * 40) : 1 + Math.floor(r() * 6);
+          const base = p.price < 30 ? 2 + Math.floor(r() * 10) : p.price < 400 ? 1 + Math.floor(r() * 4) : 1;
           return makeLine(p, base * (biz ? 3 : 1));
         });
         const discountPct = biz && r() < 0.3 ? 5 : 0;
@@ -194,12 +187,13 @@ const Store = (() => {
 
     const hoursAgo = (h) => new Date(now.getTime() - h * 3600e3);
     const contactOf = (c, extra) => ({ phone: c.phone, email: c.email, delivery: 'pickup', address: '', city: c.city, payment: 'card', notes: '', ...extra });
+    const bySku = (sku) => products.find((p) => p.sku === sku) || products[0];
     const orders = [
       buildOrder({ number: 5001, date: hoursAgo(20), cust: customers[6], contact: contactOf(customers[6]),
-        lines: [makeLine(products[14], 24), makeLine(products[16], 2)], vatRate: settings.vatRate }),
+        lines: [makeLine(bySku('250'), 1), makeLine(bySku('210310'), 2), makeLine(bySku('SW-LR110'), 1)], vatRate: settings.vatRate }),
       buildOrder({ number: 5002, date: hoursAgo(3), cust: customers[8],
         contact: contactOf(customers[8], { delivery: 'delivery', address: 'רחוב הדוגמה 12', payment: 'cash', notes: 'נא לתאם את שעת המשלוח מראש.' }),
-        lines: [makeLine(products[7], 3), makeLine(products[19], 1), makeLine(products[17], 2)], vatRate: settings.vatRate }),
+        lines: [makeLine(bySku('11510360'), 8), makeLine(bySku('1125360'), 12), makeLine(bySku('TOTS48300N'), 3)], vatRate: settings.vatRate }),
     ];
 
     return { settings, suppliers, products, customers, invoices, orders, movements: [], nextInvoiceNo: number, nextOrderNo: 5003 };
@@ -376,6 +370,7 @@ const Store = (() => {
       min: num(d.min, 'מלאי מינימום'),
       cost: num(d.cost, 'מחיר עלות'),
       price: num(d.price, 'מחיר מכירה', { allowZero: false }),
+      img: /^https:\/\/\S+$/.test(text(d.img)) ? text(d.img) : '',
     };
     if (!state.suppliers.some((s) => s.id === p.supplierId)) throw new Error('יש לבחור ספק קיים.');
     if (state.products.some((x) => x.sku === p.sku && x.id !== d.id)) throw new Error('המק״ט כבר קיים במלאי.');

@@ -96,8 +96,8 @@ const InvoiceAPI = (() => {
 
     // The provider computes the totals again and compares them with the request.
     const gross = round2(p.items.reduce((s, i) => s + round2(i.quantity * i.unitprice), 0));
-    const before = round2(gross - round2((gross * (p.discount_percent || 0)) / 100));
-    const total = round2(before + round2((before * (p.vat_percent || 0)) / 100));
+    const total = round2(gross - round2((gross * (p.discount_percent || 0)) / 100)); // unit prices include VAT
+    const before = round2(total / (1 + (p.vat_percent || 0) / 100));
     if (!p.totals || Math.abs(total - p.totals.total) > 0.01) throw bad(400, 'totals_mismatch', 'הסכום הכולל אינו תואם לשורות המסמך.');
 
     // Same reference twice returns the same document, so a retry is safe.

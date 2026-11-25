@@ -352,7 +352,7 @@ function invoiceHtml(inv) {
     </header>
     <p class="inv-to"><strong>לכבוד:</strong> ${esc(inv.customerName)}${inv.customerVatId ? ` · ח״פ / עוסק מורשה ${esc(inv.customerVatId)}` : ''}</p>
     <div class="table-wrap"><table>
-      <thead><tr><th>מק״ט</th><th>תיאור</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ</th></tr></thead>
+      <thead><tr><th>מק״ט</th><th>תיאור</th><th>כמות</th><th>מחיר ליחידה</th><th>סה״כ כולל מע״מ</th></tr></thead>
       <tbody>${inv.lines.map((l) => `<tr><td class="num">${esc(l.sku)}</td><td>${esc(l.name)}</td><td class="num">${fmtNum(l.qty)} ${esc(l.unit)}</td>
         <td class="num">${fmtMoney(l.price)}</td><td class="num">${fmtMoney(l.total)}</td></tr>`).join('')}</tbody>
     </table></div>
@@ -366,8 +366,7 @@ function invoiceHtml(inv) {
         ${inv.allocation.number ? `<p class="inv-alloc"><strong>מספר הקצאה:</strong> <span class="num">${esc(inv.allocation.number)}</span></p>` : ''}
       </div>
       <dl class="totals">
-        <dt>סכום ביניים</dt><dd>${fmtMoney(inv.gross)}</dd>
-        ${inv.discount ? `<dt>הנחה (${fmtNum(inv.discountPct)}%)</dt><dd>-${fmtMoney(inv.discount)}</dd>` : ''}
+        ${inv.discount ? `<dt>סכום ביניים</dt><dd>${fmtMoney(inv.gross)}</dd><dt>הנחה (${fmtNum(inv.discountPct)}%)</dt><dd>-${fmtMoney(inv.discount)}</dd>` : ''}
         <dt>לפני מע״מ</dt><dd>${fmtMoney(inv.subtotal)}</dd>
         <dt>מע״מ ${fmtNum(inv.vatRate * 100)}%</dt><dd>${fmtMoney(inv.vat)}</dd>
         <dt class="grand">סה״כ לתשלום</dt><dd class="grand">${fmtMoney(inv.total)}</dd>
@@ -501,10 +500,10 @@ function viewInventory() {
     <button class="btn btn-primary" data-action="editProduct">${icon('plus', 18)} פריט חדש</button>
   </div>
   <div class="card table-wrap"><table>
-    <thead><tr><th>מק״ט</th><th>שם הפריט</th><th>קטגוריה</th><th>ספק</th><th>כמות במלאי</th><th>מצב</th><th>עלות</th><th>מחיר מכירה</th><th>שווי מלאי</th><th><span class="sr-only">פעולות</span></th></tr></thead>
+    <thead><tr><th>מק״ט</th><th>שם הפריט</th><th>קטגוריה</th><th>ספק</th><th>כמות במלאי</th><th>מצב</th><th>עלות (לפני מע״מ)</th><th>מחיר מכירה (כולל מע״מ)</th><th>שווי מלאי</th><th><span class="sr-only">פעולות</span></th></tr></thead>
     <tbody id="inv-rows">${inventoryRows()}</tbody>
   </table></div>
-  <p class="muted">המחירים לפני מע״מ.</p>`;
+  <p class="muted">מחיר המכירה כולל מע״מ. מחיר העלות ושווי המלאי לפני מע״מ.</p>`;
 }
 function inventoryRows() {
   const { q, cat, low } = ui.inv;
@@ -706,7 +705,9 @@ function viewProvider() {
 
 /* ================= Forms (modal content) ================= */
 function productForm(p) {
-  const nextSku = 'TZ-' + (Math.max(1000, ...db().products.map((x) => Number(String(x.sku).replace(/\D/g, '')) || 0)) + 1);
+  let n = db().products.length + 1001;
+  while (db().products.some((x) => x.sku === 'TZ-' + n)) n++;
+  const nextSku = 'TZ-' + n;
   const v = p || { sku: nextSku, name: '', category: '', unit: UNITS[0], supplierId: db().suppliers[0]?.id, qty: 0, min: 0, cost: '', price: '' };
   return `<form class="form" data-form="product"><input type="hidden" name="id" value="${esc(p?.id ?? '')}">
     ${field('שם הפריט', 'name', v.name, 'required maxlength="80"', '', 'full')}
@@ -718,7 +719,8 @@ function productForm(p) {
     ${field('כמות במלאי', 'qty', v.qty, 'type="number" min="0" step="any" required')}
     ${field('מלאי מינימום', 'min', v.min, 'type="number" min="0" step="any" required', 'מתחת לכמות זו תופיע התראה.')}
     ${field('מחיר עלות (₪, לפני מע״מ)', 'cost', v.cost, 'type="number" min="0" step="0.01" required')}
-    ${field('מחיר מכירה (₪, לפני מע״מ)', 'price', v.price, 'type="number" min="0.01" step="0.01" required')}
+    ${field('מחיר מכירה (₪, כולל מע״מ)', 'price', v.price, 'type="number" min="0.01" step="0.01" required')}
+    ${field('כתובת תמונה לחנות האונליין (לא חובה)', 'img', v.img ?? '', 'type="url" dir="ltr" placeholder="https://"', '', 'full')}
     ${formFooter()}</form>`;
 }
 function receiveForm(productId) {

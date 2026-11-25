@@ -11,7 +11,6 @@ const shop = { q: '', cat: '', cart: loadCart() };
 
 const db = () => Store.state;
 const productById = (id) => db().products.find((p) => p.id === id);
-const withVat = (n) => round2(n * (1 + db().settings.vatRate));
 const categories = () => [...new Set(db().products.map((p) => p.category))];
 
 function loadCart() {
@@ -76,11 +75,11 @@ function renderGrid() {
     const [kind, label] = stockLabel(p);
     const out = kind === 'danger';
     return `<article class="p-card">
-      <div class="p-swatch sw-${cats.indexOf(p.category) % 6}">${icon('tree', 40)}</div>
+      <div class="p-swatch sw-${cats.indexOf(p.category) % 6}">${icon('tree', 40)}${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}</div>
       <div class="p-body">
         <span class="p-cat">${esc(p.category)} · מק״ט ${esc(p.sku)}</span>
         <h2>${esc(p.name)}</h2>
-        <span class="p-price">${fmtMoney(withVat(p.price))} <small>/ ${esc(p.unit)}</small></span>
+        <span class="p-price">${fmtMoney(p.price)} <small>/ ${esc(p.unit)}</small></span>
         <span class="p-stock ${kind}">${label}</span>
         <button class="btn ${out ? '' : 'btn-primary'}" data-action="addToCart" data-id="${p.id}" ${out ? 'disabled' : ''} aria-label="הוספת ${esc(p.name)} לסל">
           ${out ? 'לא זמין כרגע' : `${icon('plus', 18)} הוספה לסל`}</button>
@@ -114,13 +113,13 @@ function cartHtml() {
   return `<ul class="shop-lines">${shop.cart.map((l) => {
     const p = productById(l.productId);
     return `<li class="cart-line">
-      <div class="cl-name"><strong>${esc(p.name)}</strong><small>${fmtMoney(withVat(p.price))} / ${esc(p.unit)}</small></div>
+      <div class="cl-name"><strong>${esc(p.name)}</strong><small>${fmtMoney(p.price)} / ${esc(p.unit)}</small></div>
       <div class="stepper">
         <button data-action="step" data-id="${p.id}" data-d="1" aria-label="הוספת יחידה">${icon('plus', 16)}</button>
         <input type="number" inputmode="decimal" min="1" step="1" max="${Store.availableQty(p.id)}" value="${l.qty}" data-change="qty" data-id="${p.id}" aria-label="כמות של ${esc(p.name)} ב${esc(p.unit)}">
         <button data-action="step" data-id="${p.id}" data-d="-1" aria-label="הפחתת יחידה">${icon('minus', 16)}</button>
       </div>
-      <b class="num cl-total">${fmtMoney(withVat(round2(l.qty * p.price)))}</b>
+      <b class="num cl-total">${fmtMoney(round2(l.qty * p.price))}</b>
       <button class="icon-btn danger" data-action="removeLine" data-id="${p.id}" aria-label="הסרת ${esc(p.name)} מהסל">${icon('trash', 18)}</button>
     </li>`;
   }).join('')}</ul>
@@ -157,7 +156,7 @@ function checkoutHtml() {
     <label class="field"><span>טלפון</span><input name="phone" type="tel" required pattern="[0-9+\\- ]{9,15}" autocomplete="tel" placeholder="050-0000000"><small>ניצור קשר במספר זה לתיאום ההזמנה.</small></label>
     <label class="field full"><span>דוא״ל (לא חובה)</span><input name="email" type="email" dir="ltr" autocomplete="email"></label>
     <fieldset class="radio-row full"><legend>איך לקבל את ההזמנה?</legend>
-      <label><input type="radio" name="delivery" value="pickup" checked data-change="delivery"> איסוף עצמי מהמחסן</label>
+      <label><input type="radio" name="delivery" value="pickup" checked data-change="delivery"> איסוף עצמי</label>
       <label><input type="radio" name="delivery" value="delivery" data-change="delivery"> משלוח (העלות תימסר בטלפון)</label>
     </fieldset>
     <label class="field" data-ship hidden><span>כתובת למשלוח</span><input name="address" maxlength="120" autocomplete="street-address"></label>
@@ -259,5 +258,9 @@ const b = db().settings.business;
 $('#brand-mark').innerHTML = icon('tree', 26);
 $('#search-icon').innerHTML = icon('search', 18);
 $('#modal-close').innerHTML = icon('x');
-$('#shop-contact').textContent = `${b.name} · ${b.tagline} · ${b.address} · טל׳ ${b.phone}`;
+$('#shop-contact').textContent = `${b.name} · ${b.tagline} · ${b.address} · טל׳ ${b.phone} · ${b.hours}`;
+// A picture that does not load is removed. The colour block with the icon stays.
+document.addEventListener('error', (e) => { if (e.target.matches?.('.p-swatch img')) e.target.remove(); }, true);
+// Until a picture loads, the colour block with the icon shows in its place.
+document.addEventListener('load', (e) => { if (e.target.matches?.('.p-swatch img')) e.target.classList.add('ready'); }, true);
 renderAll();

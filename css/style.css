@@ -316,3 +316,7 @@ dialog::backdrop { background: rgba(20, 30, 25, 0.55); }
   .cl-name { grid-column: 1 / -1; }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Inventory table: keep the item name and the supplier readable. The wrapper scrolls when the table is too wide. */
+#inv-rows td:nth-child(2) { min-width: 240px; }
+#inv-rows td:nth-child(4) { min-width: 150px; }
